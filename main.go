@@ -33,6 +33,8 @@ func main() {
 		return
 	}
 
+	log.Println("Bot is running ....")
+
 	err = commands.Listen(bot)
 	if err != nil {
 		log.Printf("Bot SHIT DOWN! Error: %s", err.Error())
