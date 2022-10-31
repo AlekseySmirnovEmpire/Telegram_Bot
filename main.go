@@ -16,6 +16,8 @@ func init() {
 }
 
 func main() {
+	defer log.Println("Bot STOPPED!")
+
 	//init configs
 	err := config.Init()
 	if err != nil {
@@ -42,6 +44,6 @@ func main() {
 
 	err = commands.Listen(bot)
 	if err != nil {
-		log.Printf("Bot SHIT DOWN! Error: %s", err.Error())
+		log.Printf("Bot SHUT DOWN! Error: %s", err.Error())
 	}
 }
