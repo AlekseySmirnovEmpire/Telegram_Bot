@@ -4,6 +4,7 @@ import (
 	bot2 "Telegram_Bot/bot"
 	"Telegram_Bot/commands"
 	"Telegram_Bot/config"
+	"Telegram_Bot/db"
 	"github.com/joho/godotenv"
 	"log"
 )
@@ -23,8 +24,12 @@ func main() {
 	}
 
 	//init db
-	//defer db.CloseDB()
-	//err = db.InitDB()
+	defer db.CloseDB()
+	err = db.InitDB()
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
 
 	//Init bot itself
 	bot, err := bot2.CreateBot()
