@@ -4,6 +4,8 @@ import (
 	"Telegram_Bot/config"
 	"Telegram_Bot/errors"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 	"log"
 )
 
