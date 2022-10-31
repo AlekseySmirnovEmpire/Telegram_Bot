@@ -28,7 +28,11 @@ func Listen(bot *tgbotapi.BotAPI) error {
 		if reflect.TypeOf(upd.Message.Text).Kind() == reflect.String && upd.Message.Text != "" {
 			switch upd.Message.Text {
 			case "/start":
-				err = start(bot, upd)
+				err = start(bot, &upd)
+			default:
+				msg := tgbotapi.NewMessage(upd.Message.Chat.ID, upd.Message.Text)
+				msg.Text = "Простите, но я не знаю такой команды!"
+				_, _ = bot.Send(msg)
 			}
 		} else {
 			msg := tgbotapi.NewMessage(upd.Message.Chat.ID, "Простите, не распознаю команду!")
