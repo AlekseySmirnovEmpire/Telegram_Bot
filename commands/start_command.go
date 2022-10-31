@@ -13,6 +13,7 @@ var nkStart = tgbotapi.NewReplyKeyboard(
 func start(bot *tgbotapi.BotAPI, upd tgbotapi.Update) error {
 	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, upd.Message.Text)
 
+	msg.Text = "Здарова!"
 	msg.ReplyMarkup = nkStart
 	if _, err := bot.Send(msg); err != nil {
 		return err
