@@ -15,21 +15,24 @@ var (
 			tgbotapi.NewKeyboardButton("Здравствуй, карта!"),
 		),
 	)
-	Usr *data.User
 )
 
 func start(bot *tgbotapi.BotAPI, upd *tgbotapi.Update) error {
 	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, upd.Message.Text)
 
-	var err error
-	Usr, err = data.InitUser(int64(upd.Message.From.ID))
+	usr, err := data.FindUser(int64(upd.Message.From.ID))
 	if err != nil {
-		msg.Text = fmt.Sprintf(
-			"Здравствуйте, %s!\nПриносим свои извенения, бот недоступен по техническим причинам!",
-			upd.Message.From.FirstName)
-		log.Println(err.Error())
-		_, _ = bot.Send(msg)
-		return nil
+		usr, err = data.InitUser(int64(upd.Message.From.ID))
+		if err != nil {
+			msg.Text = fmt.Sprintf(
+				"Здравствуйте, %s!\nПриносим свои извенения, бот недоступен по техническим причинам!",
+				upd.Message.From.FirstName)
+			log.Println(err.Error())
+			_, _ = bot.Send(msg)
+			return nil
+		}
+
+		AddUser(usr, usr.Key)
 	}
 
 	msg.Text = fmt.Sprintf("Здравствуйте, %s! Добро пожаловать!", upd.Message.From.FirstName)
@@ -39,14 +42,4 @@ func start(bot *tgbotapi.BotAPI, upd *tgbotapi.Update) error {
 	}
 
 	return nil
-}
-
-func CheckUser(upd *tgbotapi.Update) (string, bool) {
-	if Usr == nil {
-		return fmt.Sprintf(
-			"Здравствуйте, %s!\nПриносим свои извенения, бот недоступен по техническим причинам!",
-			upd.Message.From.FirstName), false
-	}
-
-	return "", true
 }

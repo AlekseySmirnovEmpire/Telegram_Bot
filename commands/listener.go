@@ -1,10 +1,14 @@
 package commands
 
 import (
+	"Telegram_Bot/data"
+	"Telegram_Bot/errors"
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"log"
 	"reflect"
 )
+
+var users map[int64]*data.User
 
 // Listen listener.
 func Listen(bot *tgbotapi.BotAPI) error {
@@ -45,4 +49,18 @@ func Listen(bot *tgbotapi.BotAPI) error {
 	}
 
 	return nil
+}
+
+func AddUser(usr *data.User, ID int64) {
+	if len(users) == 0 {
+		users = make(map[int64]*data.User, 0)
+	}
+	users[ID] = usr
+}
+
+func FindUser(ID int64) (*data.User, error) {
+	if usr, ok := users[ID]; ok {
+		return usr, nil
+	}
+	return nil, errors.NotFound{Val: string(ID), Key: "users"}
 }
