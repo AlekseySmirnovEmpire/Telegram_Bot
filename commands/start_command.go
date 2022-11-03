@@ -4,49 +4,53 @@ import (
 	"Telegram_Bot/data"
 	"fmt"
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
-	"log"
+	"github.com/enescakir/emoji"
+	"strconv"
 )
 
-var (
-	nkStart = tgbotapi.NewReplyKeyboard(
-		tgbotapi.NewKeyboardButtonRow(
-			tgbotapi.NewKeyboardButton("Пройти тест!"),
-			tgbotapi.NewKeyboardButton("Карта, карта, карта..."),
-			tgbotapi.NewKeyboardButton("Здравствуй, карта!"),
-		),
-	)
-	Usr *data.User
-)
+func start(upd *tgbotapi.Update) (string, error) {
+	if IsUserAuth(strconv.Itoa(upd.Message.From.ID)) {
+		return fmt.Sprintf("Вы уже стартовали %v", emoji.SlightlySmilingFace), nil
+	}
 
-func start(bot *tgbotapi.BotAPI, upd *tgbotapi.Update) error {
-	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, upd.Message.Text)
-
-	var err error
-	Usr, err = data.InitUser(int64(upd.Message.From.ID))
+	usr, err := data.CreateUser(strconv.Itoa(upd.Message.From.ID))
 	if err != nil {
-		msg.Text = fmt.Sprintf(
-			"Здравствуйте, %s!\nПриносим свои извенения, бот недоступен по техническим причинам!",
-			upd.Message.From.FirstName)
-		log.Println(err.Error())
-		_, _ = bot.Send(msg)
-		return nil
+		return "", err
 	}
 
-	msg.Text = fmt.Sprintf("Здравствуйте, %s! Добро пожаловать!", upd.Message.From.FirstName)
-	msg.ReplyMarkup = nkStart
-	if _, err = bot.Send(msg); err != nil {
-		return err
-	}
+	addUser(usr)
 
-	return nil
+	return fmt.Sprintf("Здравствуйте, %s! Добро пожаловать!", upd.Message.From.FirstName), nil
 }
 
-func CheckUser(upd *tgbotapi.Update) (string, bool) {
-	if Usr == nil {
-		return fmt.Sprintf(
-			"Здравствуйте, %s!\nПриносим свои извенения, бот недоступен по техническим причинам!",
-			upd.Message.From.FirstName), false
+func getRandomShit(msg *tgbotapi.Message) string {
+	var str string
+
+	if msg.Sticker != nil {
+		str = fmt.Sprintf(
+			"Я люблю стикеры %v, но продолжить работу смогу только после ответа в опроснике %v",
+			emoji.SlightlySmilingFace,
+			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
+	} else if msg.Photo != nil {
+		str = fmt.Sprintf(
+			"Фотка огонь %v, но для продолжения вам нужно ответить по кнопке %v",
+			emoji.SlightlySmilingFace,
+			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
+	} else if msg.PinnedMessage != nil || msg.ReplyToMessage != nil {
+		str = fmt.Sprintf(
+			"Уверен, там что-то интересное %v, но продолжить работу смогу только после ответа в опроснике %v",
+			emoji.SlightlySmilingFace,
+			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
+	} else if emj := emoji.Parse(msg.Text); emj != "" {
+		str = fmt.Sprintf(
+			"Я люблю эмоджи %v, но продолжить работу смогу только после ответа в опроснике %v",
+			emoji.SlightlySmilingFace,
+			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
+	} else {
+		str = fmt.Sprintf(
+			"Для того, чтобы воспользоваться ботом, пожалуйста, ответьте в опроснике %v",
+			emoji.SlightlySmilingFace)
 	}
 
-	return "", true
+	return str
 }
