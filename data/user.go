@@ -68,3 +68,9 @@ func InitUsers() (map[string]*User, error) {
 
 	return um, nil
 }
+
+func ChangeAgeConfirm(key string) error {
+	query := fmt.Sprintf(`UPDATE users SET age_confirmed = true WHERE user_key = '%s'`, key)
+	err := db.InsertOrUpdate[User](&query)
+	return err
+}
