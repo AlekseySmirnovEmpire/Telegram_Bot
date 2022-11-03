@@ -3,7 +3,6 @@ package data
 import (
 	"Telegram_Bot/db"
 	"Telegram_Bot/errors"
-	errors2 "errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -13,33 +12,16 @@ import (
 
 type User struct {
 	ID             uuid.UUID   `db:"u_id"`
-	Key            int64       `db:"user_key"`
+	Key            string      `db:"user_key"`
 	Subscribe      bool        `db:"subscribe"`
+	AgeConfirmed   bool        `db:"age_confirmed"`
 	CreatedAt      time.Time   `db:"created_at"`
 	SubscribeAt    pq.NullTime `db:"subscribe_at"`
 	SubscribeEndAt pq.NullTime `db:"subscribe_end_at"`
 }
 
-func InitUser(key int64) (*User, error) {
-	u, err := FindUser(key)
-
-	var nse errors.NotSingle
-	if err != nil {
-		if errors2.As(err, &nse) {
-			u, err = createUser(key)
-			if err != nil {
-				return nil, errors.NotSingle{Val: "users", Err: "cannot create user!"}
-			}
-		} else {
-			return nil, errors.NoConnection{Val: "Postgres", Err: err.Error()}
-		}
-	}
-
-	return u, nil
-}
-
-func FindUser(key int64) (*User, error) {
-	query := fmt.Sprintf(`SELECT * FROM users AS u WHERE u.user_key = %o`, key)
+func FindUser(key string) (*User, error) {
+	query := fmt.Sprintf(`SELECT * FROM users AS u WHERE u.user_key = '%s'`, key)
 	usr, err := db.Select[User](&query)
 	if err != nil {
 		log.Println(err.Error())
@@ -52,9 +34,9 @@ func FindUser(key int64) (*User, error) {
 	return usr[0], nil
 }
 
-func createUser(key int64) (*User, error) {
+func CreateUser(key string) (*User, error) {
 	query := fmt.Sprintf(
-		`INSERT INTO users (user_key, created_at) VALUES (%o, '%s')`,
+		`INSERT INTO users (user_key, created_at) VALUES ('%s', '%s')`,
 		key,
 		time.Now().Format("2006-01-02 15:04:05"))
 	err := db.InsertOrUpdate[User](&query)
@@ -68,4 +50,21 @@ func createUser(key int64) (*User, error) {
 	}
 
 	return u, nil
+}
+
+func InitUsers() (map[string]*User, error) {
+	query := fmt.Sprintf(`SELECT * FROM users`)
+	ul, err := db.Select[User](&query)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("There are %d users gets from DB!\n", len(ul))
+
+	um := make(map[string]*User, 0)
+	for _, u := range ul {
+		um[u.Key] = u
+	}
+	log.Printf("There are %d users inited!\n", len(um))
+
+	return um, nil
 }
