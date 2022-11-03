@@ -4,45 +4,53 @@ import (
 	"Telegram_Bot/data"
 	"fmt"
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
-	"log"
+	"github.com/enescakir/emoji"
+	"strconv"
 )
 
-func start(bot *tgbotapi.BotAPI, upd *tgbotapi.Update) error {
-	msg := tgbotapi.NewMessage(upd.Message.Chat.ID, upd.Message.Text)
+func start(upd *tgbotapi.Update) (string, error) {
+	if IsUserAuth(strconv.Itoa(upd.Message.From.ID)) {
+		return fmt.Sprintf("Вы уже стартовали %v", emoji.SlightlySmilingFace), nil
+	}
 
-	usr, err := FindUserInArray(int64(upd.Message.From.ID))
+	usr, err := data.CreateUser(strconv.Itoa(upd.Message.From.ID))
 	if err != nil {
-		usr, err = data.InitUser(int64(upd.Message.From.ID))
-		if err != nil {
-			msg.Text = fmt.Sprintf(
-				"Здравствуйте, %s!\nПриносим свои извенения, бот недоступен по техническим причинам!",
-				upd.Message.From.FirstName)
-			log.Println(err.Error())
-			_, _ = bot.Send(msg)
-			return nil
-		}
-
-		AddUser(usr, usr.Key)
+		return "", err
 	}
 
-	msg.Text = fmt.Sprintf("Здравствуйте, %s! Добро пожаловать!", upd.Message.From.FirstName)
-	if _, err = bot.Send(msg); err != nil {
-		return err
+	addUser(usr)
+
+	return fmt.Sprintf("Здравствуйте, %s! Добро пожаловать!", upd.Message.From.FirstName), nil
+}
+
+func getRandomShit(msg *tgbotapi.Message) string {
+	var str string
+
+	if msg.Sticker != nil {
+		str = fmt.Sprintf(
+			"Я люблю стикеры %v, но продолжить работу смогу только после ответа в опроснике %v",
+			emoji.SlightlySmilingFace,
+			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
+	} else if msg.Photo != nil {
+		str = fmt.Sprintf(
+			"Фотка огонь %v, но для продолжения вам нужно ответить по кнопке %v",
+			emoji.SlightlySmilingFace,
+			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
+	} else if msg.PinnedMessage != nil || msg.ReplyToMessage != nil {
+		str = fmt.Sprintf(
+			"Уверен, там что-то интересное %v, но продолжить работу смогу только после ответа в опроснике %v",
+			emoji.SlightlySmilingFace,
+			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
+	} else if emj := emoji.Parse(msg.Text); emj != "" {
+		str = fmt.Sprintf(
+			"Я люблю эмоджи %v, но продолжить работу смогу только после ответа в опроснике %v",
+			emoji.SlightlySmilingFace,
+			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
+	} else {
+		str = fmt.Sprintf(
+			"Для того, чтобы воспользоваться ботом, пожалуйста, ответьте в опроснике %v",
+			emoji.SlightlySmilingFace)
 	}
 
-	if !CheckAge(int64(upd.Message.From.ID)) {
-		msg.Text = fmt.Sprintf(
-			"Для продолжения пользования ботом Вы должны быть старше 18 лет.\nВы подтверждаете, что вам больше 18 лет?")
-		nkAge := tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonData("Да", fmt.Sprintf("Age_Confirm_Yes:%o", upd.Message.From.ID)),
-				tgbotapi.NewInlineKeyboardButtonData("Нет", fmt.Sprintf("Age_Confirm_No:%o", upd.Message.From.ID)),
-			))
-		msg.ReplyMarkup = nkAge
-		if _, err = bot.Send(msg); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return str
 }
