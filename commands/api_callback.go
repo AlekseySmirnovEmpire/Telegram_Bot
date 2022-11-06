@@ -47,10 +47,16 @@ func ageAnswerCheck(bot *tgbotapi.BotAPI, data []string) (str string, err error)
 		err = data2.ChangeAgeConfirm(data[2])
 		if err == nil {
 			um[data[2]].AgeConfirmed = true
+			if _, ok := ageConfMesID[data[2]]; ok {
+				delete(ageConfMesID, data[2])
+			}
 		}
 		break
 	case "No":
 		str = fmt.Sprintf("Вам должно быть 18+ для пользования ботом!%v", emoji.FaceWithRollingEyes)
+		if _, ok := ageConfMesID[data[2]]; ok {
+			delete(ageConfMesID, data[2])
+		}
 		break
 	}
 
