@@ -10,7 +10,7 @@ import (
 
 func start(upd *tgbotapi.Update) (string, error) {
 	if IsUserAuth(strconv.Itoa(upd.Message.From.ID)) {
-		return fmt.Sprintf("Вы уже стартовали %v", emoji.SlightlySmilingFace), nil
+		return "", nil
 	}
 
 	userName := fmt.Sprintf("%s %s", upd.Message.From.FirstName, upd.Message.From.LastName)

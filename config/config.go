@@ -1,7 +1,7 @@
 package config
 
 import (
-	"Telegram_Bot/errors"
+	"Telegram_Bot/myErrors"
 	"log"
 	"os"
 )
@@ -17,15 +17,15 @@ func Init() error {
 
 	token, exist := os.LookupEnv("Telegram_Token")
 	if !exist || token == "" {
-		return errors.EmptyFile{Val: ".env"}
+		return myErrors.EmptyFile{Val: ".env"}
 	}
 	conStr, exist := os.LookupEnv("Connection_String")
 	if !exist || conStr == "" {
-		return errors.EmptyFile{Val: ".env"}
+		return myErrors.EmptyFile{Val: ".env"}
 	}
 	env, exist := os.LookupEnv("Environment")
 	if !exist || env == "" {
-		return errors.EmptyFile{Val: ".env"}
+		return myErrors.EmptyFile{Val: ".env"}
 	}
 	Token = token
 	ConStr = conStr

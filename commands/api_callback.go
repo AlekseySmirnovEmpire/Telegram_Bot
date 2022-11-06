@@ -16,22 +16,27 @@ func callBack(upd *tgbotapi.Update, bot *tgbotapi.BotAPI) (err error) {
 		return nil
 	}
 
+	var showMenu bool
+
 	switch data[0] {
 	case "Age_Confirm":
-		str, err = ageAnswerCheck(bot, data)
+		str, showMenu, err = ageAnswerCheck(bot, data)
 		break
 	default:
-		str = defaultAnswer(bot, data)
+		str = defaultAnswer(bot, data, false)
 	}
 
 	if str != "" {
 		_, _ = bot.Send(tgbotapi.NewMessage(upd.CallbackQuery.Message.Chat.ID, str))
 	}
+	if showMenu {
+		_ = initMainMenu(upd, bot, upd.CallbackQuery.Message.Chat.ID)
+	}
 
 	return err
 }
 
-func ageAnswerCheck(bot *tgbotapi.BotAPI, data []string) (str string, err error) {
+func ageAnswerCheck(bot *tgbotapi.BotAPI, data []string) (str string, showMenu bool, err error) {
 	ch := make(chan struct{})
 	defer close(ch)
 	go func() {
@@ -50,6 +55,7 @@ func ageAnswerCheck(bot *tgbotapi.BotAPI, data []string) (str string, err error)
 			if _, ok := ageConfMesID[data[2]]; ok {
 				delete(ageConfMesID, data[2])
 			}
+			showMenu = true
 		}
 		break
 	case "No":
@@ -57,23 +63,26 @@ func ageAnswerCheck(bot *tgbotapi.BotAPI, data []string) (str string, err error)
 		if _, ok := ageConfMesID[data[2]]; ok {
 			delete(ageConfMesID, data[2])
 		}
+		showMenu = false
 		break
 	}
 
 	<-ch
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
-	return str, nil
+	return str, showMenu, nil
 }
 
-func defaultAnswer(bot *tgbotapi.BotAPI, data []string) string {
+func defaultAnswer(bot *tgbotapi.BotAPI, data []string, isDelete bool) string {
 	ch := make(chan struct{})
 	defer close(ch)
 	go func() {
-		chatId, _ := strconv.ParseInt(data[3], 10, 64)
-		msgId, _ := strconv.Atoi(data[4])
-		removeInlineBlock(chatId, msgId, bot)
+		if isDelete {
+			chatId, _ := strconv.ParseInt(data[3], 10, 64)
+			msgId, _ := strconv.Atoi(data[4])
+			removeInlineBlock(chatId, msgId, bot)
+		}
 		ch <- struct{}{}
 	}()
 

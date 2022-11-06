@@ -2,7 +2,7 @@ package data
 
 import (
 	"Telegram_Bot/db"
-	"Telegram_Bot/errors"
+	"Telegram_Bot/myErrors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -30,7 +30,7 @@ func FindUser(key string) (*User, error) {
 		return nil, err
 	}
 	if len(usr) != 1 {
-		return nil, errors.NotSingle{Val: "users", Err: "There is more then 1 or no data in DB."}
+		return nil, myErrors.NotSingle{Val: "users", Err: "There is more then 1 or no data in DB."}
 	}
 
 	return usr[0], nil

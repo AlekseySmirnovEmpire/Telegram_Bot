@@ -2,7 +2,8 @@ package commands
 
 import (
 	"Telegram_Bot/data"
-	"Telegram_Bot/errors"
+	"Telegram_Bot/myErrors"
+	"errors"
 	"fmt"
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"github.com/enescakir/emoji"
@@ -39,13 +40,23 @@ func Listen(bot *tgbotapi.BotAPI) error {
 
 	for upd := range updates {
 		if upd.Message != nil {
-			msg := tgbotapi.NewMessage(upd.Message.Chat.ID, upd.Message.Text)
+			msg := tgbotapi.NewMessage(upd.Message.Chat.ID, "")
+			isInit := false
 
 			// Message is text message (no video, sticker etc.).
 			if reflect.TypeOf(upd.Message.Text).Kind() == reflect.String && upd.Message.Text != "" {
 				switch upd.Message.Text {
 				case "/start":
 					msg.Text, err = start(&upd)
+					break
+				case "/menu":
+					var noConf myErrors.NotConfirmed
+					err = initMainMenu(&upd, bot, upd.Message.Chat.ID)
+					isInit = true
+					if errors.As(err, &noConf) {
+						msg.Text = noConf.Error()
+						err = nil
+					}
 					break
 				default:
 					msg.Text = getRandomShit(upd.Message)
@@ -64,7 +75,11 @@ func Listen(bot *tgbotapi.BotAPI) error {
 			}
 
 			// Отправляем полученное сообщение
-			_, _ = bot.Send(msg)
+			if msg.Text != "" {
+				_, _ = bot.Send(msg)
+			} else if !isInit {
+				_ = initMainMenu(&upd, bot, upd.Message.Chat.ID)
+			}
 
 			// Если юзер не подтверждал возраст
 			if IsUserAuth(strconv.Itoa(upd.Message.From.ID)) && !um[strconv.Itoa(upd.Message.From.ID)].AgeConfirmed {
@@ -105,7 +120,7 @@ func FindUser(userID string) (*data.User, error) {
 		return u, nil
 	}
 
-	return nil, errors.NotFound{Val: "users map", Key: "no user in map"}
+	return nil, myErrors.NotFound{Val: "users map", Key: "no user in map"}
 }
 
 func addUser(u *data.User) {
