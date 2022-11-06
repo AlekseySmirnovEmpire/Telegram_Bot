@@ -2,7 +2,7 @@ package db
 
 import (
 	"Telegram_Bot/config"
-	"Telegram_Bot/errors"
+	"Telegram_Bot/myErrors"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -33,11 +33,11 @@ func InitDB() error {
 	var err error
 	db, err = sqlx.Open(dbName, config.ConStr)
 	if err != nil {
-		return errors.NoConnection{Val: "Postgres", Err: err.Error()}
+		return myErrors.NoConnection{Val: "Postgres", Err: err.Error()}
 	}
 
 	if err = db.Ping(); err != nil {
-		return errors.NoConnection{Val: "Postgres PING", Err: err.Error()}
+		return myErrors.NoConnection{Val: "Postgres PING", Err: err.Error()}
 	}
 
 	log.Println("Connecting DB SUCCESS!")
