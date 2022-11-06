@@ -13,7 +13,10 @@ func start(upd *tgbotapi.Update) (string, error) {
 		return fmt.Sprintf("Вы уже стартовали %v", emoji.SlightlySmilingFace), nil
 	}
 
-	usr, err := data.CreateUser(strconv.Itoa(upd.Message.From.ID))
+	userName := fmt.Sprintf("%s %s", upd.Message.From.FirstName, upd.Message.From.LastName)
+	userKey := strconv.Itoa(upd.Message.From.ID)
+
+	usr, err := data.CreateUser(&userKey, &userName, &upd.Message.From.UserName)
 	if err != nil {
 		return "", err
 	}
@@ -39,11 +42,6 @@ func getRandomShit(msg *tgbotapi.Message) string {
 	} else if msg.PinnedMessage != nil || msg.ReplyToMessage != nil {
 		str = fmt.Sprintf(
 			"Уверен, там что-то интересное %v, но продолжить работу смогу только после ответа в опроснике %v",
-			emoji.SlightlySmilingFace,
-			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
-	} else if emj := emoji.Parse(msg.Text); emj != "" {
-		str = fmt.Sprintf(
-			"Я люблю эмоджи %v, но продолжить работу смогу только после ответа в опроснике %v",
 			emoji.SlightlySmilingFace,
 			emoji.BackhandIndexPointingDown.Tone(emoji.Light))
 	} else {
