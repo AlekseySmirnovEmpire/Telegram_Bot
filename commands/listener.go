@@ -50,11 +50,7 @@ func Listen(bot *tgbotapi.BotAPI) error {
 			userID := strconv.Itoa(upd.Message.From.ID)
 
 			// удаляем кнопки у прежнего сообщения
-			ch := make(chan struct{})
-			go func(uID *string, cID int64) {
-				clearMessagesList(uID, cID, bot)
-				ch <- struct{}{}
-			}(&userID, upd.Message.Chat.ID)
+			clearMessagesList(&userID, upd.Message.Chat.ID, bot)
 
 			msg := tgbotapi.NewMessage(upd.Message.Chat.ID, "")
 			isInit := false
@@ -84,9 +80,6 @@ func Listen(bot *tgbotapi.BotAPI) error {
 			} else {
 				msg.Text = getRandomShit(upd.Message)
 			}
-
-			<-ch
-			close(ch)
 
 			// Если получили ошибку, то отвечаем что что-то не так.
 			if err != nil {
@@ -119,16 +112,10 @@ func Listen(bot *tgbotapi.BotAPI) error {
 				userID := strconv.Itoa(upd.CallbackQuery.From.ID)
 
 				// удаляем скнопки из предыдущего сообщения
-				ch := make(chan struct{})
-				go func(uID *string, cID int64) {
-					clearMessagesList(uID, cID, bot)
-					ch <- struct{}{}
-				}(&userID, upd.CallbackQuery.Message.Chat.ID)
+				clearMessagesList(&userID, upd.CallbackQuery.Message.Chat.ID, bot)
 
+				// слушаем ответ от кнопки
 				err = callBack(&upd, bot)
-
-				<-ch
-				close(ch)
 
 				if err != nil {
 					_, _ = bot.Send(tgbotapi.NewMessage(
