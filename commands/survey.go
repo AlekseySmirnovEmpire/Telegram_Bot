@@ -30,8 +30,6 @@ func survey(
 			emoji.ConfusedFace,
 			emoji.WinkingFace)
 		break
-	case "Continue":
-		break
 	default:
 		msg.Text, err = newQuest(data, &msg)
 	}
@@ -46,6 +44,26 @@ func survey(
 	messageToDelete[(*data)[2]] = msgG.MessageID
 
 	return nil
+}
+
+func restartSurvey(data *[]string, upd *tgbotapi.Update, msg *tgbotapi.MessageConfig) (str string, err error) {
+	userID := strconv.Itoa(upd.CallbackQuery.Message.From.ID)
+	user, err := FindUser(userID)
+	if err != nil {
+		return "", err
+	}
+
+	err = data2.DeleteAnswer(0, &userID, true)
+	if err != nil {
+		return "", err
+	}
+
+	user.QuestCount = 0
+	str, err = sendQuestion(1, data, msg)
+	if err != nil {
+		return "", err
+	}
+	return str, nil
 }
 
 func newSurvey(data *[]string, msg *tgbotapi.MessageConfig) (string, error) {
@@ -128,6 +146,15 @@ func continueQuest(data *[]string, msg *tgbotapi.MessageConfig) (string, error) 
 
 	// Анкета закончилась
 	if questID+1 > len(ql) {
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					"Выйти в меню",
+					fmt.Sprintf(
+						"Menu:quest:%s:%s",
+						(*data)[2],
+						(*data)[3])),
+			))
 		return "Спасибо, что прошли нашу анкету!", nil
 	}
 

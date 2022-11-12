@@ -73,3 +73,11 @@ func InsertOrUpdate[T comparable](query *string) error {
 	}
 	return nil
 }
+
+func Delete[T comparable](query *string) error {
+	_, err := db.Exec(*query)
+	if err != nil {
+		return err
+	}
+	return nil
+}
