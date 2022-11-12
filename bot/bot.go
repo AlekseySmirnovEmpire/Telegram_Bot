@@ -2,7 +2,7 @@ package bot
 
 import (
 	"Telegram_Bot/config"
-	"Telegram_Bot/errors"
+	"Telegram_Bot/myErrors"
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"log"
 )
@@ -13,7 +13,7 @@ func CreateBot() (*tgbotapi.BotAPI, error) {
 
 	bot, err := tgbotapi.NewBotAPI(config.Token)
 	if err != nil {
-		return nil, errors.NoConnection{Val: "Telegram", Err: err.Error()}
+		return nil, myErrors.NoConnection{Val: "Telegram", Key: err.Error(), Err: err}
 	}
 
 	if config.IsDev {
