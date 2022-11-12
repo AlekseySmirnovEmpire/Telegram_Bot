@@ -33,11 +33,11 @@ func InitDB() error {
 	var err error
 	db, err = sqlx.Open(dbName, config.ConStr)
 	if err != nil {
-		return myErrors.NoConnection{Val: "Postgres", Err: err.Error()}
+		return myErrors.NoConnection{Val: "Postgres", Key: err.Error(), Err: err}
 	}
 
 	if err = db.Ping(); err != nil {
-		return myErrors.NoConnection{Val: "Postgres PING", Err: err.Error()}
+		return myErrors.NoConnection{Val: "Postgres PING", Key: err.Error(), Err: err}
 	}
 
 	log.Println("Connecting DB SUCCESS!")

@@ -14,6 +14,7 @@ type User struct {
 	ID             uuid.UUID   `db:"u_id"`
 	Key            string      `db:"user_key"`
 	Name           string      `db:"name"`
+	QuestCount     int         `db:"quest_completed"`
 	TagName        string      `db:"tag"`
 	Subscribe      bool        `db:"subscribe"`
 	AgeConfirmed   bool        `db:"age_confirmed"`
@@ -30,7 +31,7 @@ func FindUser(key string) (*User, error) {
 		return nil, err
 	}
 	if len(usr) != 1 {
-		return nil, myErrors.NotSingle{Val: "users", Err: "There is more then 1 or no data in DB."}
+		return nil, myErrors.NotSingle{Val: "users", Key: "There is more then 1 or no data in DB.", Err: err}
 	}
 
 	return usr[0], nil

@@ -4,13 +4,14 @@ import "fmt"
 
 type NoConnection struct {
 	Val string
-	Err string
+	Key string
+	Err error
 }
 
 func (n NoConnection) Error() string {
-	return fmt.Sprintf("Error connection to \"%s\", error is: %s", n.Val, n.Err)
+	return fmt.Sprintf("Error connection to \"%s\", error is: %s", n.Val, n.Key)
 }
 
 func (n NoConnection) Unwrap() error {
-	return n
+	return n.Err
 }

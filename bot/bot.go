@@ -13,7 +13,7 @@ func CreateBot() (*tgbotapi.BotAPI, error) {
 
 	bot, err := tgbotapi.NewBotAPI(config.Token)
 	if err != nil {
-		return nil, myErrors.NoConnection{Val: "Telegram", Err: err.Error()}
+		return nil, myErrors.NoConnection{Val: "Telegram", Key: err.Error(), Err: err}
 	}
 
 	if config.IsDev {
