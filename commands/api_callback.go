@@ -25,6 +25,8 @@ func callBack(upd *tgbotapi.Update, bot *tgbotapi.BotAPI) (err error) {
 	case "Survey":
 		err = survey(&data, upd, bot)
 		return err
+	case "Menu":
+		err = initMainMenu(upd, bot, upd.CallbackQuery.Message.Chat.ID)
 	default:
 		str = defaultAnswer()
 	}

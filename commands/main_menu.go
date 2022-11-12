@@ -5,6 +5,7 @@ import (
 	"fmt"
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"strconv"
+	"strings"
 )
 
 func initMainMenu(upd *tgbotapi.Update, bot *tgbotapi.BotAPI, chatID int64) (err error) {
@@ -55,7 +56,7 @@ func initMainMenu(upd *tgbotapi.Update, bot *tgbotapi.BotAPI, chatID int64) (err
 		),
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(
-				"Пройти опрос заново",
+				"Отредактировать Анкету",
 				fmt.Sprintf(
 					"Survey:Old:%s:%s",
 					userKey,
@@ -68,7 +69,7 @@ func initMainMenu(upd *tgbotapi.Update, bot *tgbotapi.BotAPI, chatID int64) (err
 					chat)),
 		))
 
-	msg.Text = fmt.Sprintf("%s, добро пожаловать в бота! Выберите действие, что вы хотите сделать:", u.Name)
+	msg.Text = fmt.Sprintf("%s, добро пожаловать в бота! Выберите действие, что вы хотите сделать:", strings.Split(u.Name, " ")[0])
 	_, _ = bot.Send(msg)
 
 	return nil

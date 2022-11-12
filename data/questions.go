@@ -50,3 +50,18 @@ func InsertAnswer(key, answer *string, questID int) error {
 
 	return nil
 }
+
+func DeleteAnswer(ansID int, userKey *string, full bool) error {
+	var query string
+	if full {
+		query = fmt.Sprintf(`DELETE FROM users_to_questions * WHERE u_key = '%s'`, *userKey)
+	} else {
+		query = fmt.Sprintf(`DELETE FROM users_to_questions * WHERE u_key = '%s' AND q_id = %d`, *userKey, ansID)
+	}
+
+	err := db.Delete[Question](&query)
+	if err != nil {
+		return err
+	}
+	return nil
+}
