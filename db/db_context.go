@@ -2,7 +2,7 @@ package db
 
 import (
 	"Telegram_Bot/config"
-	"Telegram_Bot/errors"
+	"Telegram_Bot/myErrors"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -33,11 +33,11 @@ func InitDB() error {
 	var err error
 	db, err = sqlx.Open(dbName, config.ConStr)
 	if err != nil {
-		return errors.NoConnection{Val: "Postgres", Err: err.Error()}
+		return myErrors.NoConnection{Val: "Postgres", Key: err.Error(), Err: err}
 	}
 
 	if err = db.Ping(); err != nil {
-		return errors.NoConnection{Val: "Postgres PING", Err: err.Error()}
+		return myErrors.NoConnection{Val: "Postgres PING", Key: err.Error(), Err: err}
 	}
 
 	log.Println("Connecting DB SUCCESS!")
@@ -69,6 +69,14 @@ func Select[T comparable](query *string) ([]*T, error) {
 func InsertOrUpdate[T comparable](query *string) error {
 	_, err := db.Exec(*query)
 	if err == nil {
+		return err
+	}
+	return nil
+}
+
+func Delete[T comparable](query *string) error {
+	_, err := db.Exec(*query)
+	if err != nil {
 		return err
 	}
 	return nil

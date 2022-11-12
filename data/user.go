@@ -2,7 +2,7 @@ package data
 
 import (
 	"Telegram_Bot/db"
-	"Telegram_Bot/errors"
+	"Telegram_Bot/myErrors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
@@ -13,6 +13,9 @@ import (
 type User struct {
 	ID             uuid.UUID   `db:"u_id"`
 	Key            string      `db:"user_key"`
+	Name           string      `db:"name"`
+	QuestCount     int         `db:"quest_completed"`
+	TagName        string      `db:"tag"`
 	Subscribe      bool        `db:"subscribe"`
 	AgeConfirmed   bool        `db:"age_confirmed"`
 	CreatedAt      time.Time   `db:"created_at"`
@@ -28,23 +31,25 @@ func FindUser(key string) (*User, error) {
 		return nil, err
 	}
 	if len(usr) != 1 {
-		return nil, errors.NotSingle{Val: "users", Err: "There is more then 1 or no data in DB."}
+		return nil, myErrors.NotSingle{Val: "users", Key: "There is more then 1 or no data in DB.", Err: err}
 	}
 
 	return usr[0], nil
 }
 
-func CreateUser(key string) (*User, error) {
+func CreateUser(key, userName, userTag *string) (*User, error) {
 	query := fmt.Sprintf(
-		`INSERT INTO users (user_key, created_at) VALUES ('%s', '%s')`,
-		key,
+		`INSERT INTO users (user_key, name, tag, created_at) VALUES ('%s', '%s', '%s', '%s')`,
+		*key,
+		*userName,
+		*userTag,
 		time.Now().Format("2006-01-02 15:04:05"))
 	err := db.InsertOrUpdate[User](&query)
 	if err != nil {
 		return nil, err
 	}
 
-	u, err := FindUser(key)
+	u, err := FindUser(*key)
 	if err != nil {
 		return nil, err
 	}
