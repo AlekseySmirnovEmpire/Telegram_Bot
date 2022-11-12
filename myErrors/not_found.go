@@ -5,6 +5,7 @@ import "fmt"
 type NotFound struct {
 	Val string
 	Key string
+	Err error
 }
 
 func (n NotFound) Error() string {
@@ -12,5 +13,5 @@ func (n NotFound) Error() string {
 }
 
 func (n NotFound) Unwrap() error {
-	return n
+	return n.Err
 }

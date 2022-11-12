@@ -5,6 +5,7 @@ import "fmt"
 type EmptyFile struct {
 	Val     string
 	isExist bool
+	Err     error
 }
 
 func (e EmptyFile) Error() string {
@@ -16,5 +17,5 @@ func (e EmptyFile) Error() string {
 }
 
 func (e EmptyFile) Unwrap() error {
-	return e
+	return e.Err
 }

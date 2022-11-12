@@ -26,14 +26,26 @@ func initMainMenu(upd *tgbotapi.Update, bot *tgbotapi.BotAPI, chatID int64) (err
 	msg := tgbotapi.NewMessage(chatID, "")
 	chat := strconv.FormatInt(chatID, 10)
 
+	var quest tgbotapi.InlineKeyboardButton
+	if u.QuestCount > 1 && u.QuestCount < len(ql) {
+		quest = tgbotapi.NewInlineKeyboardButtonData(
+			"Продолжить анкету",
+			fmt.Sprintf(
+				"Survey:New:%s:%s",
+				userKey,
+				chat))
+	} else {
+		quest = tgbotapi.NewInlineKeyboardButtonData(
+			"Пройти анкету",
+			fmt.Sprintf(
+				"Survey:New:%s:%s",
+				userKey,
+				chat))
+	}
+
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
-			tgbotapi.NewInlineKeyboardButtonData(
-				"Пройти опрос",
-				fmt.Sprintf(
-					"Survey:New:%s:%s",
-					userKey,
-					chat)),
+			quest,
 			tgbotapi.NewInlineKeyboardButtonData(
 				"Пройти парный опрос",
 				fmt.Sprintf(

@@ -5,6 +5,7 @@ import "fmt"
 type NotConfirmed struct {
 	Val string
 	Key string
+	Err error
 }
 
 func (n NotConfirmed) Error() string {
@@ -12,5 +13,5 @@ func (n NotConfirmed) Error() string {
 }
 
 func (n NotConfirmed) Unwrap() error {
-	return n
+	return n.Err
 }

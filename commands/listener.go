@@ -13,10 +13,12 @@ import (
 )
 
 type users map[string]*data.User
+type questions []*data.Question
 
 var (
-	um           users
-	ageConfMesID map[string]int
+	um              users
+	messageToDelete map[string]int
+	ql              questions
 )
 
 // Listen listener.
@@ -36,10 +38,24 @@ func Listen(bot *tgbotapi.BotAPI) error {
 	if err != nil {
 		return err
 	}
-	ageConfMesID = make(map[string]int, 0)
+	messageToDelete = make(map[string]int, 0)
+
+	ql, err = data.InitQuestions()
+	if err != nil || ql == nil {
+		return myErrors.NotFound{Val: "questions", Key: err.Error()}
+	}
 
 	for upd := range updates {
 		if upd.Message != nil {
+			userID := strconv.Itoa(upd.Message.From.ID)
+
+			// удаляем кнопки у прежнего сообщения
+			ch := make(chan struct{})
+			go func(uID *string, cID int64) {
+				clearMessagesList(uID, cID, bot)
+				ch <- struct{}{}
+			}(&userID, upd.Message.Chat.ID)
+
 			msg := tgbotapi.NewMessage(upd.Message.Chat.ID, "")
 			isInit := false
 
@@ -50,11 +66,15 @@ func Listen(bot *tgbotapi.BotAPI) error {
 					msg.Text, err = start(&upd)
 					break
 				case "/menu":
-					var noConf myErrors.NotConfirmed
 					err = initMainMenu(&upd, bot, upd.Message.Chat.ID)
 					isInit = true
+					var noConf myErrors.NotConfirmed
+					var notFound myErrors.NotFound
 					if errors.As(err, &noConf) {
 						msg.Text = noConf.Error()
+						err = nil
+					} else if errors.As(err, &notFound) {
+						msg.Text = "Вы не прошли проверку на возраст!"
 						err = nil
 					}
 					break
@@ -64,6 +84,9 @@ func Listen(bot *tgbotapi.BotAPI) error {
 			} else {
 				msg.Text = getRandomShit(upd.Message)
 			}
+
+			<-ch
+			close(ch)
 
 			// Если получили ошибку, то отвечаем что что-то не так.
 			if err != nil {
@@ -87,17 +110,26 @@ func Listen(bot *tgbotapi.BotAPI) error {
 				msg.Text = AgeConfirm(&msg, &upd)
 				msg2, err2 := bot.Send(msg)
 				if err2 == nil {
-					userID := strconv.Itoa(upd.Message.From.ID)
-					if _, ok := ageConfMesID[userID]; ok {
-						delete(ageConfMesID, userID)
-					}
-					ageConfMesID[userID] = msg2.MessageID
+					messageToDelete[userID] = msg2.MessageID
 				}
 			}
 		} else {
 			// Мы получили ответ через кнопку
 			if upd.CallbackQuery != nil {
+				userID := strconv.Itoa(upd.CallbackQuery.From.ID)
+
+				// удаляем скнопки из предыдущего сообщения
+				ch := make(chan struct{})
+				go func(uID *string, cID int64) {
+					clearMessagesList(uID, cID, bot)
+					ch <- struct{}{}
+				}(&userID, upd.CallbackQuery.Message.Chat.ID)
+
 				err = callBack(&upd, bot)
+
+				<-ch
+				close(ch)
+
 				if err != nil {
 					_, _ = bot.Send(tgbotapi.NewMessage(
 						upd.CallbackQuery.Message.Chat.ID,
@@ -120,9 +152,16 @@ func FindUser(userID string) (*data.User, error) {
 		return u, nil
 	}
 
-	return nil, myErrors.NotFound{Val: "users map", Key: "no user in map"}
+	return nil, myErrors.NotFound{Val: "users map", Key: "no user in map", Err: errors.New("no users")}
 }
 
 func addUser(u *data.User) {
 	um[u.Key] = u
+}
+
+func clearMessagesList(key *string, chatID int64, bot *tgbotapi.BotAPI) {
+	if msgID, ok := messageToDelete[*key]; ok {
+		removeInlineBlock(chatID, msgID, bot)
+		delete(messageToDelete, *key)
+	}
 }
