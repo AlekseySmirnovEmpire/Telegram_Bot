@@ -22,6 +22,21 @@ func InitQuestions() ([]*Question, error) {
 	return ql, err
 }
 
+func UpdateQuestion(key, answer *string, questID int) error {
+	query := fmt.Sprintf(
+		`UPDATE users_to_questions SET answer = '%s' WHERE u_key = '%s' AND q_id = %d`,
+		*answer,
+		*key,
+		questID)
+	err := db.InsertOrUpdate[Question](&query)
+	if err != nil {
+		log.Printf("Cannot update answer for user '%s' for question '%d'", *key, questID)
+		return err
+	}
+
+	return nil
+}
+
 func InsertAnswer(key, answer *string, questID int) error {
 	query := fmt.Sprintf(`INSERT INTO users_to_questions (u_key, q_id, answer) VALUES ('%s', %d, '%s')`,
 		*key,
