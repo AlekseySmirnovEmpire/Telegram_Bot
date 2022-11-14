@@ -13,6 +13,7 @@ func survey(
 	data *[]string,
 	upd *tgbotapi.Update,
 	bot *tgbotapi.BotAPI) (err error) {
+
 	msg := tgbotapi.NewMessage(upd.CallbackQuery.Message.Chat.ID, "")
 	switch (*data)[1] {
 	case "New":
@@ -25,11 +26,10 @@ func survey(
 			emoji.WinkingFace)
 		break
 	case "Old":
-		msg.Text = fmt.Sprintf(
-			"Простите, пока не доступно %v, но мы уже страемся над тем, чтобы вы скоро смогли этим воспользоваться %v",
-			emoji.ConfusedFace,
-			emoji.WinkingFace)
+		msg.Text = redactSurvey(data, &msg)
 		break
+	case "Restart":
+		msg.Text, err = restartSurvey(data, upd, &msg)
 	default:
 		msg.Text, err = newQuest(data, &msg)
 	}
@@ -46,14 +46,43 @@ func survey(
 	return nil
 }
 
+func redactSurvey(data *[]string, msg *tgbotapi.MessageConfig) string {
+	u, err := FindUser((*data)[2])
+	if err != nil {
+		return ""
+	}
+
+	if u.QuestCount < len(ql) {
+		return "Вы ещё не прошли полностью анкету! Сперва завершите её!"
+	}
+
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(
+				"Редактировать",
+				fmt.Sprintf(
+					"Pager:Init:%s:%s",
+					(*data)[2],
+					(*data)[3])),
+		),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(
+				"Пройти заново",
+				fmt.Sprintf(
+					"Survey:Restart:%s:%s",
+					(*data)[2],
+					(*data)[3])),
+		))
+	return "Нажмите \"Пройти заново\", если вы хотите снова пройти анкету. Если вы хотите изменить свой ответ на конкретный вопрос - нажмите \"Редактировать\"."
+}
+
 func restartSurvey(data *[]string, upd *tgbotapi.Update, msg *tgbotapi.MessageConfig) (str string, err error) {
-	userID := strconv.Itoa(upd.CallbackQuery.Message.From.ID)
-	user, err := FindUser(userID)
+	user, err := FindUser((*data)[2])
 	if err != nil {
 		return "", err
 	}
 
-	err = data2.DeleteAnswer(0, &userID, true)
+	err = data2.DeleteAnswer(0, &(*data)[2], true)
 	if err != nil {
 		return "", err
 	}
