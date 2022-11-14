@@ -19,6 +19,7 @@ var (
 	um              users
 	messageToDelete map[string]int
 	ql              questions
+	pagerMes        map[string]int
 )
 
 // Listen listener.
@@ -39,6 +40,7 @@ func Listen(bot *tgbotapi.BotAPI) error {
 		return err
 	}
 	messageToDelete = make(map[string]int, 0)
+	pagerMes = make(map[string]int, 0)
 
 	ql, err = data.InitQuestions()
 	if err != nil || ql == nil {
