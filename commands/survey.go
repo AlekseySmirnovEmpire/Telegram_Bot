@@ -29,6 +29,7 @@ func survey(
 		msg.Text = redactSurvey(data, &msg)
 		break
 	case "Restart":
+		clearMessagesList(&(*data)[2], upd.CallbackQuery.Message.Chat.ID, bot)
 		msg.Text, err = restartSurvey(data, upd, &msg)
 	default:
 		msg.Text, err = newQuest(data, &msg)
@@ -37,11 +38,10 @@ func survey(
 		return err
 	}
 
-	msgG, err := bot.Send(msg)
+	err = editAndSendMessage(upd.CallbackQuery.Message.Chat.ID, bot, &(*data)[2], &msg)
 	if err != nil {
 		return err
 	}
-	messageToDelete[(*data)[2]] = msgG.MessageID
 
 	return nil
 }

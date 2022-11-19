@@ -51,9 +51,6 @@ func Listen(bot *tgbotapi.BotAPI) error {
 		if upd.Message != nil {
 			userID := strconv.Itoa(upd.Message.From.ID)
 
-			// удаляем кнопки у прежнего сообщения
-			clearMessagesList(&userID, upd.Message.Chat.ID, bot)
-
 			msg := tgbotapi.NewMessage(upd.Message.Chat.ID, "")
 			isInit := false
 
@@ -111,10 +108,6 @@ func Listen(bot *tgbotapi.BotAPI) error {
 		} else {
 			// Мы получили ответ через кнопку
 			if upd.CallbackQuery != nil {
-				userID := strconv.Itoa(upd.CallbackQuery.From.ID)
-
-				// удаляем скнопки из предыдущего сообщения
-				clearMessagesList(&userID, upd.CallbackQuery.Message.Chat.ID, bot)
 
 				// слушаем ответ от кнопки
 				err = callBack(&upd, bot)
@@ -146,6 +139,35 @@ func FindUser(userID string) (*data.User, error) {
 
 func addUser(u *data.User) {
 	um[u.Key] = u
+}
+
+func editAndSendMessage(chatID int64, bot *tgbotapi.BotAPI, key *string, msg *tgbotapi.MessageConfig) error {
+	if msgID, ok := messageToDelete[*key]; ok {
+		editMes := tgbotapi.NewEditMessageText(chatID, msgID, msg.Text)
+		ms, err := bot.Send(editMes)
+		if err != nil {
+			return err
+		}
+		delete(messageToDelete, *key)
+		if msg.ReplyMarkup != nil {
+			editMes1 := tgbotapi.NewEditMessageReplyMarkup(chatID, msgID, msg.ReplyMarkup.(tgbotapi.InlineKeyboardMarkup))
+			ms, err = bot.Send(editMes1)
+			if err != nil {
+				return err
+			}
+			messageToDelete[*key] = ms.MessageID
+		}
+	} else {
+		ms, err := bot.Send(msg)
+		if err != nil {
+			return err
+		}
+		if msg.ReplyMarkup != nil {
+			messageToDelete[*key] = ms.MessageID
+		}
+	}
+
+	return nil
 }
 
 func clearMessagesList(key *string, chatID int64, bot *tgbotapi.BotAPI) {

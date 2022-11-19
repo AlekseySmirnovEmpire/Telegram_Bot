@@ -26,6 +26,7 @@ func callBack(upd *tgbotapi.Update, bot *tgbotapi.BotAPI) (err error) {
 		err = survey(&data, upd, bot)
 		return err
 	case "Menu":
+		clearMessagesList(&data[2], upd.CallbackQuery.Message.Chat.ID, bot)
 		err = initMainMenu(upd, bot, upd.CallbackQuery.Message.Chat.ID)
 	case "Pager":
 		err = pager(&data, upd, bot)
@@ -38,6 +39,7 @@ func callBack(upd *tgbotapi.Update, bot *tgbotapi.BotAPI) (err error) {
 		_, _ = bot.Send(msg)
 	}
 	if showMenu {
+		clearMessagesList(&data[2], upd.CallbackQuery.Message.Chat.ID, bot)
 		_ = initMainMenu(upd, bot, upd.CallbackQuery.Message.Chat.ID)
 	}
 
