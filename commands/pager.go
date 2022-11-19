@@ -16,6 +16,7 @@ func pager(data *[]string,
 
 	switch (*data)[1] {
 	case "Init":
+		clearMessagesList(&(*data)[2], upd.CallbackQuery.Message.Chat.ID, bot)
 		msg.Text = initPager(data, 0, &msg)
 		break
 	default:
@@ -27,11 +28,7 @@ func pager(data *[]string,
 	}
 
 	if msg.Text != "" {
-		m, err1 := bot.Send(msg)
-		if err1 != nil {
-			return err1
-		}
-		pagerMes[(*data)[2]] = m.MessageID
+		err = editAndSendMessage(upd.CallbackQuery.Message.Chat.ID, bot, &(*data)[2], &msg)
 	}
 
 	return nil
