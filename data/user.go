@@ -79,3 +79,13 @@ func ChangeAgeConfirm(key string) error {
 	err := db.InsertOrUpdate[User](&query)
 	return err
 }
+
+func LoadPairs(ID uuid.UUID) ([]*User, error) {
+	query := fmt.Sprintf(`SELECT * FROM users AS u JOIN pairs AS p ON p.u_id = u.u_id WHERE p.u_id = '%s'`, ID)
+	ul, err := db.Select[User](&query)
+	if err != nil {
+		return nil, err
+	}
+
+	return ul, err
+}

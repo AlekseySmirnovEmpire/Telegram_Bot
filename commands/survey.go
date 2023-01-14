@@ -20,10 +20,8 @@ func survey(
 		msg.Text, err = newSurvey(data, &msg)
 		break
 	case "Pair":
-		msg.Text = fmt.Sprintf(
-			"Простите, пока не доступно %v, но мы уже страемся над тем, чтобы вы скоро смогли этим воспользоваться %v",
-			emoji.ConfusedFace,
-			emoji.WinkingFace)
+		clearMessagesList(&(*data)[2], upd.CallbackQuery.Message.Chat.ID, bot)
+		msg.Text = pairSurvey(data, &msg)
 		break
 	case "Old":
 		msg.Text = redactSurvey(data, &msg)
@@ -44,6 +42,51 @@ func survey(
 	}
 
 	return nil
+}
+
+func pairSurvey(data *[]string, msg *tgbotapi.MessageConfig) string {
+	u, err := FindUser((*data)[2])
+	if err != nil {
+		return ""
+	}
+
+	if u.QuestCount != 0 && u.QuestCount < len(ql) {
+		return fmt.Sprintf(
+			"Вы уже начали проходить индивидуальную анкету, завершите сначала её %v",
+			emoji.WinkingFace)
+	}
+
+	if _, ok := pairs[u.Key]; ok {
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					"Пройти парный опрос",
+					fmt.Sprintf(
+						"Pair:Choose:%s:%s",
+						(*data)[2],
+						(*data)[3])),
+			),
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					"Новая пара",
+					fmt.Sprintf(
+						"Pair:New:%s:%s",
+						(*data)[2],
+						(*data)[3])),
+			))
+		return "Выберите \"Пройти парный опрос\", чтобы пройти с опрос вместе с парой.\nЕсли вы хотите выбрать новую пару - нажмите \"Новая пара\"."
+	} else {
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonData(
+					"Создать пару",
+					fmt.Sprintf(
+						"Pair:Init:%s:%s",
+						(*data)[2],
+						(*data)[3])),
+			))
+		return "У вас ещё не выбрана пара!\nНажмите \"Создать пару\" и выбирите человека, чтобы пройти с ним парный опрос."
+	}
 }
 
 func redactSurvey(data *[]string, msg *tgbotapi.MessageConfig) string {

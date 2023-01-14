@@ -14,12 +14,14 @@ import (
 
 type users map[string]*data.User
 type questions []*data.Question
+type userPairs map[string][]*data.User
 
 var (
 	um              users
 	messageToDelete map[string]int
 	ql              questions
 	pagerMes        map[string]int
+	pairs           userPairs
 )
 
 // Listen listener.
@@ -41,6 +43,21 @@ func Listen(bot *tgbotapi.BotAPI) error {
 	}
 	messageToDelete = make(map[string]int, 0)
 	pagerMes = make(map[string]int, 0)
+
+	//ПРогружаем всех пар.
+	log.Println("Loading pairs ....")
+	for _, user := range um {
+		ul, err1 := data.LoadPairs(user.ID)
+		if err1 != nil {
+			log.Printf("There is error while trying to get pairs for user %s", user.Key)
+			continue
+		}
+
+		if ul != nil && len(ul) > 0 {
+			pairs[user.Key] = ul
+		}
+	}
+	log.Printf("Loaded %d pairs!", len(pairs))
 
 	ql, err = data.InitQuestions()
 	if err != nil || ql == nil {
@@ -103,6 +120,53 @@ func Listen(bot *tgbotapi.BotAPI) error {
 				msg2, err2 := bot.Send(msg)
 				if err2 == nil {
 					messageToDelete[userID] = msg2.MessageID
+				}
+			}
+		} else if upd.InlineQuery != nil {
+			// Наш инлайн затригерился
+			var articles []interface{}
+			uId := strconv.Itoa(upd.InlineQuery.From.ID)
+
+			if _, ok := um[uId]; ok {
+				mes := fmt.Sprintf(
+					"Эй, привет!\nЯ прошёл опрос в анкете и приглашаю тебя пройти парный опрос %s\nЗаходи в бота, жми по кнопке ниже %s",
+					emoji.WinkingFace, emoji.BackhandIndexPointingDown)
+				msg := tgbotapi.NewInlineQueryResultArticleMarkdown(
+					"Pair",
+					"Парный опрос",
+					mes)
+				keyboard := tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonURL(
+							"Перейти в бота",
+							fmt.Sprintf("https://t.me/%s", bot.Self.UserName))))
+				msg.ReplyMarkup = &keyboard
+				articles = append(articles, msg)
+			} else {
+				msg := tgbotapi.NewInlineQueryResultArticleMarkdown(
+					upd.InlineQuery.ID,
+					"Ошибка!",
+					"Что-то пошло не так! Проверьте, подтвердили ли вы свой возраст в боте!")
+				articles = append(articles, msg)
+			}
+
+			inlineConfig := tgbotapi.InlineConfig{
+				InlineQueryID: upd.InlineQuery.ID,
+				IsPersonal:    true,
+				CacheTime:     0,
+				Results:       articles,
+			}
+
+			_, err2 := bot.AnswerInlineQuery(inlineConfig)
+			if err2 != nil {
+				log.Println(err)
+			}
+			chatId, err2 := strconv.ParseInt(uId, 10, 64)
+			if err2 == nil {
+				message := tgbotapi.NewMessage(chatId, fmt.Sprintf("Парный опрос отправлен %s", emoji.ThumbsUp))
+				err2 = editAndSendMessage(chatId, bot, &uId, &message)
+				if err2 != nil {
+					log.Println(err2)
 				}
 			}
 		} else {
