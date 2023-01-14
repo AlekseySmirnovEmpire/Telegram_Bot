@@ -28,8 +28,18 @@ func callBack(upd *tgbotapi.Update, bot *tgbotapi.BotAPI) (err error) {
 	case "Menu":
 		clearMessagesList(&data[2], upd.CallbackQuery.Message.Chat.ID, bot)
 		err = initMainMenu(upd, bot, upd.CallbackQuery.Message.Chat.ID)
+		break
 	case "Pager":
 		err = pager(&data, upd, bot)
+		break
+	case "Pair":
+		err = pair(&data, upd, bot)
+		break
+	case "Find":
+		str = fmt.Sprintf(
+			"Это платный контент, который скоро появится, а пока подождите %v",
+			emoji.BeamingFaceWithSmilingEyes)
+		break
 	default:
 		str = defaultAnswer()
 	}
