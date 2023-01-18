@@ -9,5 +9,6 @@ require (
 	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
+	github.com/tealeg/xlsx v1.0.5 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
 )

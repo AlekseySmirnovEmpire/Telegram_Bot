@@ -3,9 +3,10 @@ package commands
 import (
 	"Telegram_Bot/myErrors"
 	"fmt"
-	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"strconv"
 	"strings"
+
+	tgbotapi "github.com/Syfaro/telegram-bot-api"
 )
 
 func initMainMenu(upd *tgbotapi.Update, bot *tgbotapi.BotAPI, chatID int64) (err error) {
@@ -50,7 +51,7 @@ func initMainMenu(upd *tgbotapi.Update, bot *tgbotapi.BotAPI, chatID int64) (err
 			tgbotapi.NewInlineKeyboardButtonData(
 				"Пройти парный опрос",
 				fmt.Sprintf(
-					"Survey:Pair:%s:%s",
+					"Pair:Init:%s:%s",
 					userKey,
 					chat)),
 		),

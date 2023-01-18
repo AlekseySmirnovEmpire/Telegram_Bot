@@ -4,9 +4,10 @@ import (
 	data2 "Telegram_Bot/data"
 	"Telegram_Bot/myErrors"
 	"fmt"
-	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"strconv"
 	"strings"
+
+	tgbotapi "github.com/Syfaro/telegram-bot-api"
 )
 
 func pager(data *[]string,
@@ -171,6 +172,15 @@ func initPager(data *[]string,
 				(*data)[3])))
 	}
 
-	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows)
+	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+		tgbotapi.NewInlineKeyboardRow(rows...),
+		tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonData(
+				"Выйти в меню",
+				fmt.Sprintf(
+					"Menu:quest:%s:%s",
+					(*data)[2],
+					(*data)[3])),
+		))
 	return str
 }

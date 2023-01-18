@@ -3,10 +3,10 @@ package commands
 import (
 	data2 "Telegram_Bot/data"
 	"fmt"
-	tgbotapi "github.com/Syfaro/telegram-bot-api"
-	"github.com/enescakir/emoji"
 	"strconv"
 	"strings"
+
+	tgbotapi "github.com/Syfaro/telegram-bot-api"
 )
 
 func survey(
@@ -50,17 +50,11 @@ func pairSurvey(data *[]string, msg *tgbotapi.MessageConfig) string {
 		return ""
 	}
 
-	if u.QuestCount != 0 && u.QuestCount < len(ql) {
-		return fmt.Sprintf(
-			"Вы уже начали проходить индивидуальную анкету, завершите сначала её %v",
-			emoji.WinkingFace)
-	}
-
 	if _, ok := pairs[u.Key]; ok {
 		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					"Пройти парный опрос",
+					"Указать пару",
 					fmt.Sprintf(
 						"Pair:Choose:%s:%s",
 						(*data)[2],
@@ -68,7 +62,7 @@ func pairSurvey(data *[]string, msg *tgbotapi.MessageConfig) string {
 			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonData(
-					"Новая пара",
+					"Создать новую",
 					fmt.Sprintf(
 						"Pair:New:%s:%s",
 						(*data)[2],
@@ -153,16 +147,16 @@ func newSurvey(data *[]string, msg *tgbotapi.MessageConfig) (string, error) {
 		return str, nil
 	}
 	questID := u.QuestCount + 1
+	msgData := fmt.Sprintf("Survey:%d:%s:%s", questID, (*data)[2], (*data)[3])
+	if len(*data) == 5 {
+		msgData += fmt.Sprintf(":%s", (*data)[4])
+	}
 
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(
 				"Начать",
-				fmt.Sprintf(
-					"Survey:%d:%s:%s",
-					questID,
-					(*data)[2],
-					(*data)[3])),
+				msgData),
 		))
 	return fmt.Sprintf(
 		"%s, сейчас вы будете проходить тест, Вам будет предложено 3 варианта ответа на каждый вопрос: \"да\", \"нет\", \"возможно\". Если вы готовы, то нажмите \"Начать\"!",
@@ -227,6 +221,13 @@ func continueQuest(data *[]string, msg *tgbotapi.MessageConfig) (string, error) 
 						(*data)[2],
 						(*data)[3])),
 			))
+		if len(*data) == 5 {
+			str, err := data2.CreateAnket()
+			if err != nil {
+				return "Спасибо, что прошли нашу анкету!\nК сожалению, ваша анкета пока не сгенерировалась, но результаты мы сохранили!", nil
+			}
+			return fmt.Sprintf("Спасибо, что прошли нашу анкету! ID вашей анкеты: `%s`", str), nil
+		}
 		return "Спасибо, что прошли нашу анкету!", nil
 	}
 
@@ -239,29 +240,25 @@ func continueQuest(data *[]string, msg *tgbotapi.MessageConfig) (string, error) 
 }
 
 func sendQuestion(questID int, data *[]string, msg *tgbotapi.MessageConfig) (string, error) {
+	msgDataYes := fmt.Sprintf("Survey:%d_yes:%s:%s", questID, (*data)[2], (*data)[3])
+	msgDataMaybe := fmt.Sprintf("Survey:%d_maybe:%s:%s", questID, (*data)[2], (*data)[3])
+	msgDataNo := fmt.Sprintf("Survey:%d_no:%s:%s", questID, (*data)[2], (*data)[3])
+	if len(*data) == 5 {
+		msgDataYes += fmt.Sprintf(":%s", (*data)[4])
+		msgDataMaybe += fmt.Sprintf(":%s", (*data)[4])
+		msgDataNo += fmt.Sprintf(":%s", (*data)[4])
+	}
 	msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonData(
 				"Да",
-				fmt.Sprintf(
-					"Survey:%d_yes:%s:%s",
-					questID,
-					(*data)[2],
-					(*data)[3])),
+				msgDataYes),
 			tgbotapi.NewInlineKeyboardButtonData(
 				"Возможно",
-				fmt.Sprintf(
-					"Survey:%d_maybe:%s:%s",
-					questID,
-					(*data)[2],
-					(*data)[3])),
+				msgDataMaybe),
 			tgbotapi.NewInlineKeyboardButtonData(
 				"Нет",
-				fmt.Sprintf(
-					"Survey:%d_no:%s:%s",
-					questID,
-					(*data)[2],
-					(*data)[3])),
+				msgDataNo),
 		))
 
 	return fmt.Sprintf("%d/%d: %s", questID, len(ql), ql[questID-1].Text), nil

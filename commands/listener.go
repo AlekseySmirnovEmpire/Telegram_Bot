@@ -5,16 +5,18 @@ import (
 	"Telegram_Bot/myErrors"
 	"errors"
 	"fmt"
-	tgbotapi "github.com/Syfaro/telegram-bot-api"
-	"github.com/enescakir/emoji"
 	"log"
 	"reflect"
 	"strconv"
+
+	tgbotapi "github.com/Syfaro/telegram-bot-api"
+	"github.com/enescakir/emoji"
 )
 
 type users map[string]*data.User
 type questions []*data.Question
 type userPairs map[string][]*data.User
+type waitingForUsersForID map[string]bool
 
 var (
 	um              users
@@ -22,6 +24,7 @@ var (
 	ql              questions
 	pagerMes        map[string]int
 	pairs           userPairs
+	waitForId       waitingForUsersForID
 )
 
 // Listen listener.
@@ -58,6 +61,8 @@ func Listen(bot *tgbotapi.BotAPI) error {
 		}
 	}
 	log.Printf("Loaded %d pairs!", len(pairs))
+
+	waitForId = make(map[string]bool, 0)
 
 	ql, err = data.InitQuestions()
 	if err != nil || ql == nil {

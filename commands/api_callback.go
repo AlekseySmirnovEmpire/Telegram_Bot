@@ -3,15 +3,16 @@ package commands
 import (
 	data2 "Telegram_Bot/data"
 	"fmt"
+	"strings"
+
 	tgbotapi "github.com/Syfaro/telegram-bot-api"
 	"github.com/enescakir/emoji"
-	"strings"
 )
 
 func callBack(upd *tgbotapi.Update, bot *tgbotapi.BotAPI) (err error) {
 	var str string
 	data := strings.Split(upd.CallbackQuery.Data, ":")
-	if len(data) != 4 {
+	if len(data) != 4 && len(data) != 5 {
 		return nil
 	}
 
